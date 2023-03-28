@@ -4,9 +4,8 @@ services:
   app:
     build: .
     container_name: ded_pey_tabletki
-    environment:
-      TELEGRAM_BOT_TOKEN: your_telegram_bot_token_here
-      DATABASE_URL: postgres://postgres:postgres@db:5432/ded_pey_tabletki?sslmode=disable
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
