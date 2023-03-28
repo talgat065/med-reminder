@@ -30,6 +30,8 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db_name
+    networks:
+      - app-network
 
 networks:
   app-network:
