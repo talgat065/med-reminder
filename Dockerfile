@@ -1,8 +1,7 @@
 # Build stage
 FROM golang:1.17 as builder
-
+RUN apt-get update && apt-get install -y bash
 WORKDIR /app
-RUN apk add --no-cache bash
 
 COPY go.mod go.sum ./
 RUN go mod download
