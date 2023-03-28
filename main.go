@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
