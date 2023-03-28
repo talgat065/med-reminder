@@ -12,10 +12,10 @@ RUN go build -o main
 RUN go get -u github.com/golang-migrate/migrate/v4/cmd/migrate
 
 # Runtime stage
-FROM gcr.io/distroless/base-debian11
+FROM debian:buster-slim
 
-# Install bash
-RUN apt-get update && apt-get install -y bash
+# Install bash and ca-certificates
+RUN apt-get update && apt-get install -y bash ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
