@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
-	"os"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"log"
 )
 
 type User struct {
@@ -20,7 +18,7 @@ type User struct {
 var db *sqlx.DB
 
 func main() {
-	db = sqlx.MustConnect("postgres", os.Getenv("DATABASE_URL"))
+	db = sqlx.MustConnect("postgres", "user=user password=password dbname=db_name sslmode=disable host=db port=5432")
 
 	bot, err := tgbotapi.NewBotAPI("6117441992:AAF1gwFr2SuT2yHhY9ojWR73qYuuvJzSReM")
 	if err != nil {
