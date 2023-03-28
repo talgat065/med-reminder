@@ -11,7 +11,7 @@ import (
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file: " + err.Error())
 	}
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
