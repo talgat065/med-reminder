@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y bash ca-certificates && rm -rf /var/lib
 WORKDIR /app
 
 COPY --from=builder /app/main /app/main
+COPY --from=builder /app/migrations /app/migrations
 COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
 
 EXPOSE 9000
