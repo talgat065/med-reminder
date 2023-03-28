@@ -46,3 +46,6 @@ docker-compose-up:
 
 docker-compose-down:
 	sudo docker compose down --remove-orphans
+
+migrate:
+	docker-compose run --rm app sh -c 'migrate -database "postgres://user:password@db:5432/db_name?sslmode=disable" -path migrations up'

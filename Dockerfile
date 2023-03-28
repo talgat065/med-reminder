@@ -9,6 +9,7 @@ RUN go mod download
 COPY . .
 
 RUN go build -o main
+RUN go get -u github.com/golang-migrate/migrate/v4/cmd/migrate
 
 # Runtime stage
 FROM gcr.io/distroless/base-debian11
