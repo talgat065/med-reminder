@@ -1,60 +1,68 @@
 package main
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"os"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+type User struct {
+	ID         int64
+	FirstName  string
+	LastName   string
+	Username   string
+	TelegramID int64
+}
+
+func createUserIfNotExists(db *sqlx.DB, user *User) error {
+	_, err := db.Exec(`
+		INSERT INTO users (id, first_name, last_name, username, telegram_id)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (id) DO NOTHING;
+	`, user.ID, user.FirstName, user.LastName, user.Username, user.TelegramID)
+
+	return err
+}
+
 func main() {
-	//err := godotenv.Load(".env")
-	//if err != nil {
-	//	log.Fatal("Error loading .env file: " + err.Error())
-	//}
-
-	botToken := "6117441992:AAF1gwFr2SuT2yHhY9ojWR73qYuuvJzSReM"
-
-	bot, err := tgbotapi.NewBotAPI(botToken)
+	// Configure the Telegram bot
+	b, err := tb.NewBot(tb.Settings{
+		Token:  os.Getenv("TELEGRAM_TOKEN"),
+		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 60
-
-	updates, err := bot.GetUpdatesChan(updateConfig)
+	// Configure the database connection
+	db, err := sqlx.Connect("postgres", "user=youruser password=yourpassword dbname=yourdbname sslmode=disable")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+	defer db.Close()
 
-	for update := range updates {
-		if update.Message == nil {
-			continue
+	// Handle the /start command
+	b.Handle("/start", func(m *tb.Message) {
+		user := &User{
+			ID:         m.Sender.ID,
+			FirstName:  m.Sender.FirstName,
+			LastName:   m.Sender.LastName,
+			Username:   m.Sender.Username,
+			TelegramID: m.Sender.ID,
 		}
 
-		if update.Message.IsCommand() {
-			handleCommand(bot, update.Message)
+		if err := createUserIfNotExists(db, user); err != nil {
+			log.Printf("Error handling /start command: %v", err)
+			b.Send(m.Sender, "Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.")
+		} else {
+			b.Send(m.Sender, "Добро пожаловать в бот 'Дед пей таблетки'! Я помогу вам следить за приемом лекарств.")
 		}
-	}
-}
+	})
 
-func handleCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	switch message.Command() {
-	case "start":
-		handleStartCommand(bot, message)
-	default:
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Команда не найдена. Введите /start для начала работы с ботом.")
-		bot.Send(msg)
-	}
-}
-
-func handleStartCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	response := "Привет! Я бот 'Дед пей таблетки', и я здесь, чтобы помочь тебе не забывать о приеме таблеток. " +
-		"Чтобы добавить напоминание о приеме таблеток, используй команду /add, например: /add Парацетамол. " +
-		"После этого я задам несколько вопросов, чтобы настроить напоминания для тебя."
-
-	msg := tgbotapi.NewMessage(message.Chat.ID, response)
-	bot.Send(msg)
+	// Start the bot
+	b.Start()
 }
