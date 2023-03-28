@@ -31,7 +31,7 @@ func createUserIfNotExists(db *sqlx.DB, user *User) error {
 func main() {
 	// Configure the Telegram bot
 	b, err := tb.NewBot(tb.Settings{
-		Token:  os.Getenv("TELEGRAM_TOKEN"),
+		Token:  os.Getenv("6117441992:AAF1gwFr2SuT2yHhY9ojWR73qYuuvJzSReM"),
 		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 	})
 	if err != nil {
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// Configure the database connection
-	db, err := sqlx.Connect("postgres", "user=youruser password=yourpassword dbname=yourdbname sslmode=disable")
+	db, err := sqlx.Connect("postgres", "user=user password=password dbname=db_name sslmode=disable")
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
