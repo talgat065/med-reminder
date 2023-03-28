@@ -39,10 +39,10 @@ test:
 	go test -v ./...
 
 docker-compose-build:
-	docker-compose build
+	sudo docker compose build
 
 docker-compose-up:
-	docker-compose up -d
+	sudo docker compose up -d
 
 docker-compose-down:
-	docker-compose down --remove-orphans
+	sudo docker compose down --remove-orphans
