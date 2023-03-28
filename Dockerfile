@@ -9,7 +9,7 @@ RUN go mod download
 COPY . .
 
 RUN go build -o main
-RUN go install github.com/golang-migrate/migrate/v4/cmd/migrate
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 # Runtime stage
 FROM debian:buster-slim
