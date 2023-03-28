@@ -1,4 +1,4 @@
-.PHONY: build serve clean help docker-build docker-run
+.PHONY: build serve clean help docker-build docker-run migrate
 
 .DEFAULT: help
 
@@ -48,4 +48,15 @@ docker-compose-down:
 	sudo docker compose down --remove-orphans
 
 migrate:
-	sudo docker compose run --rm app bash -c 'migrate -database "postgres://user:password@db:5432/db_name?sslmode=disable" -path /app/migrations up'
+	@echo "Running migrations..."
+	@docker run --rm \
+		--network=ded_pey_tabletki \
+		-v $(shell pwd)/migrations:/migrations \
+		-w /migrations \
+		-e POSTGRES_DB=db_name \
+		-e POSTGRES_USER=user \
+		-e POSTGRES_PASSWORD=password \
+		-e POSTGRES_HOST=postgres \
+		-e POSTGRES_PORT=5432 \
+		golang:1.17 sh -c 'go get -u github.com/golang-migrate/migrate/v4/cmd/migrate@latest && \
+			migrate -path . -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" up'
