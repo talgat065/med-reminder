@@ -2,6 +2,7 @@
 FROM golang:1.17 as builder
 
 WORKDIR /app
+RUN apk add --no-cache bash
 
 COPY go.mod go.sum ./
 RUN go mod download
