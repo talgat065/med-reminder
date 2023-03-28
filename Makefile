@@ -47,6 +47,7 @@ docker-compose-up:
 docker-compose-down:
 	sudo docker compose down --remove-orphans
 
+.PHONY: migrate
 migrate:
 	@echo "Running migrations..."
 	@docker run --rm \
@@ -60,3 +61,7 @@ migrate:
 		-e POSTGRES_PORT=5432 \
 		golang:1.17 sh -c 'go get -u github.com/golang-migrate/migrate/v4/cmd/migrate@latest && \
 			migrate -path . -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" up'
+
+migrate:
+	sudo docker compose run --rm app bash -c 'migrate -database "postgres://user:password@db:5432/db_name?sslmode=disable" -path /app/migrations up'
+
