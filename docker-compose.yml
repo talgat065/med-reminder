@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: ded_pey_tabletki
+    environment:
+      TELEGRAM_BOT_TOKEN: your_telegram_bot_token_here
+      DATABASE_URL: postgres://postgres:postgres@db:5432/ded_pey_tabletki?sslmode=disable
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  db:
+    image: postgres:13
+    container_name: ded_pey_tabletki_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ded_pey_tabletki
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:1.21
+    container_name: ded_pey_tabletki_nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "443:443"
+    depends_on:
+      - app
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:
