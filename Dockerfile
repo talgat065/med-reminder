@@ -4,7 +4,6 @@ FROM golang:1.17 as builder
 WORKDIR /app
 
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-RUN go install github.com/go-telegram-bot-api/telegram-bot-api@v4.6.4
 
 COPY go.mod go.sum ./
 RUN go mod download
