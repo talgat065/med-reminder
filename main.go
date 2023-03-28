@@ -3,66 +3,63 @@ package main
 import (
 	"log"
 	"os"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 type User struct {
-	ID         int64
-	FirstName  string
-	LastName   string
-	Username   string
-	TelegramID int64
+	ID         int64  `db:"id"`
+	TelegramID int64  `db:"telegram_id"`
+	FirstName  string `db:"first_name"`
+	LastName   string `db:"last_name"`
+	Username   string `db:"username"`
 }
 
-func createUserIfNotExists(db *sqlx.DB, user *User) error {
-	_, err := db.Exec(`
-		INSERT INTO users (id, first_name, last_name, username, telegram_id)
-		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (id) DO NOTHING;
-	`, user.ID, user.FirstName, user.LastName, user.Username, user.TelegramID)
-
-	return err
-}
+var db *sqlx.DB
 
 func main() {
-	// Configure the Telegram bot
-	b, err := tb.NewBot(tb.Settings{
-		Token:  os.Getenv("6117441992:AAF1gwFr2SuT2yHhY9ojWR73qYuuvJzSReM"),
-		Poller: &tb.LongPoller{Timeout: 10 * time.Second},
-	})
+	db = sqlx.MustConnect("postgres", os.Getenv("DATABASE_URL"))
+
+	bot, err := tgbotapi.NewBotAPI("6117441992:AAF1gwFr2SuT2yHhY9ojWR73qYuuvJzSReM")
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
-	// Configure the database connection
-	db, err := sqlx.Connect("postgres", "user=user password=password dbname=db_name sslmode=disable")
-	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+	bot.Debug = true
+
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	updates, err := bot.GetUpdatesChan(u)
+
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+
+		if update.Message.IsCommand() {
+			switch update.Message.Command() {
+			case "start":
+				createUserIfNotExists(update.Message.From)
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Привет! Я бот 'Дед пей таблетки', я помогу тебе не забывать принимать таблетки вовремя.")
+				msg.ReplyToMessageID = update.Message.MessageID
+				bot.Send(msg)
+			}
+		}
 	}
-	defer db.Close()
+}
 
-	// Handle the /start command
-	b.Handle("/start", func(m *tb.Message) {
-		user := &User{
-			ID:         m.Sender.ID,
-			FirstName:  m.Sender.FirstName,
-			LastName:   m.Sender.LastName,
-			Username:   m.Sender.Username,
-			TelegramID: m.Sender.ID,
+func createUserIfNotExists(from *tgbotapi.User) {
+	user := User{}
+	err := db.Get(&user, "SELECT * FROM users WHERE telegram_id = $1", from.ID)
+	if err != nil {
+		log.Printf("Creating new user: %s", from.UserName)
+		_, err = db.Exec(`INSERT INTO users (telegram_id, first_name, last_name, username) VALUES ($1, $2, $3, $4)`, from.ID, from.FirstName, from.LastName, from.UserName)
+		if err != nil {
+			log.Printf("Error creating user: %v", err)
 		}
-
-		if err := createUserIfNotExists(db, user); err != nil {
-			log.Printf("Error handling /start command: %v", err)
-			b.Send(m.Sender, "Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.")
-		} else {
-			b.Send(m.Sender, "Добро пожаловать в бот 'Дед пей таблетки'! Я помогу вам следить за приемом лекарств.")
-		}
-	})
-
-	// Start the bot
-	b.Start()
+	}
 }
