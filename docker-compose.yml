@@ -9,6 +9,8 @@ services:
       - .env
     depends_on:
       - db
+    networks:
+      - app-network
 
   nginx:
     build: ./nginx
@@ -19,6 +21,8 @@ services:
       - /Users/talgat/ssl:/etc/nginx/ssl
     depends_on:
       - app
+    networks:
+      - app-network
 
   db:
     image: postgres:13
@@ -26,3 +30,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db_name
+
+networks:
+  app-network:
+    driver: bridge
