@@ -9,7 +9,7 @@ RUN go mod download
 COPY . .
 
 RUN go build -o main
-RUN go install -u github.com/golang-migrate/migrate/v4/cmd/migrate
+RUN go install github.com/golang-migrate/migrate/v4/cmd/migrate
 
 # Runtime stage
 FROM debian:buster-slim
