@@ -15,6 +15,7 @@ RUN go get -u github.com/golang-migrate/migrate/v4/cmd/migrate
 
 # Runtime stage
 FROM gcr.io/distroless/base-debian11
+RUN apt-get update && apt-get install -y bash
 
 WORKDIR /app
 
