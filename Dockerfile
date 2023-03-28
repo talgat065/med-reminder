@@ -3,13 +3,14 @@ FROM golang:1.17 as builder
 
 WORKDIR /app
 
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
 RUN go build -o main
-RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 # Runtime stage
 FROM debian:buster-slim
